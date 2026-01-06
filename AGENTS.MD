@@ -38,3 +38,12 @@ You are an expert AI agent assisting with the development of a full-stack applic
 * The project's user model is 'apps.users.models.CustomUser' and should be imported directly
 * All API responses must include error handling and proper status codes
 * Follow rest naming conventions for API endpoints
+
+## GENERAL GUIDELINES
+* Use the latest stable versions of all dependencies
+* Use the established linting and formatting rules for both Python and React components
+* Use the established testing framework for both Python and React components
+* Do not commit any secrets or sensitive information
+* Do not commit any files that are not part of the project
+* Before introducing new libraries, ask for permission
+* Before adding new features, produce a detailed plan and ask for approval
