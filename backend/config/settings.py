@@ -37,7 +37,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'promptbox',
 ]
+
+AUTH_USER_MODEL = 'promptbox.User'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
