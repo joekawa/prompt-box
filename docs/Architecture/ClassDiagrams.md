@@ -18,6 +18,18 @@ classDiagram
   Organization "1" -- "*" Team : has
   Organization "1" -- "*" Prompt : owns
   Organization "1" -- "*" Category : defines
+  Organization "1" -- "*" OrganizationMember : has
+
+  class OrganizationMember {
+    +id: UUID
+    +organization_id: UUID
+    +user_id: UUID
+    +role: str
+    +created_at: datetime
+    +updated_at: datetime
+  }
+
+  User "1" -- "*" OrganizationMember : belongs_to
 
   class Team{
     +id: UUID

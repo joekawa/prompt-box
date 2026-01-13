@@ -6,6 +6,7 @@ You are an expert AI agent assisting with the development of a full-stack applic
 ## Core Principles
 *   **Code Style & Conventions**: Adhere strictly to the established linting and formatting rules for both Python and React components.
 *   **Testing**: Ensure all changes are covered by tests and pass all quality gates before committing.
+*   **Simple Front End**: The core business logic will be handled by the backend. The frontend should be simple and minimalistic.
 
 
 ## Project Structure

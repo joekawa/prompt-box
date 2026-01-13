@@ -78,6 +78,14 @@ class User(AbstractUser):
     def __str__(self):
         return self.email
 
+class OrganizationMember(BaseModel):
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='members')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='organization_memberships')
+    role = models.CharField(max_length=50) # e.g. 'ADMIN', 'MEMBER', 'VIEWER'
+
+    def __str__(self):
+        return f"{self.user.email} - {self.organization.name} ({self.role})"
+
 class Team(BaseModel):
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='teams')
     parent = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='children')
