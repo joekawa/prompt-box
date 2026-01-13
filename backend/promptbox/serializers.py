@@ -64,8 +64,8 @@ class PromptSerializer(serializers.ModelSerializer):
         model = Prompt
         fields = [
             'id', 'organization', 'created_by', 'created_by_name', 'name',
-            'description', 'prompt', 'model', 'is_active', 'created_at',
-            'updated_at', 'categories', 'shared_teams'
+            'description', 'prompt', 'model', 'visibility', 'is_active',
+            'created_at', 'updated_at', 'categories', 'shared_teams'
         ]
 
 class CreatePromptSerializer(serializers.ModelSerializer):
@@ -81,7 +81,7 @@ class CreatePromptSerializer(serializers.ModelSerializer):
         model = Prompt
         fields = [
             'id', 'organization', 'name', 'description', 'prompt',
-            'model', 'category_ids', 'team_ids'
+            'model', 'visibility', 'category_ids', 'team_ids'
         ]
 
     def create(self, validated_data):

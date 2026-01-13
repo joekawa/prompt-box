@@ -6,17 +6,18 @@ title: Prompt Box Create Prompt (Detailed)
 
 flowchart TD
     A[Home Page] --> B[Create Prompt Page]
-    B --> C[Enter Prompt Content]
-    C --> D[Select AI Model]
-    D --> E{Categorize?}
-    E -->|Existing Category| F[Select Category]
-    E -->|New Category| G[Create New Category]
-    F --> H[Sharing Settings]
-    G --> H
-    H --> I{Share with Team?}
-    I -->|Yes| J[Select Target Team(s)]
-    I -->|No| K[Mark as Private]
-    J --> L[Save Prompt]
-    K --> L
-    L --> M[Success Page]
+    B --> C[Enter Prompt Name]
+    C --> D[Enter Prompt Content]
+    D --> E[Select AI Model]
+    E --> F{Categorize}
+    F -->|Existing Category| G[Select Category]
+    F -->|New Category| H[Create New Category]
+    G --> I[Sharing Settings]
+    H --> I
+    I --> J{Share with Team}
+    J -->|Yes| K[Select Target Team]
+    J -->|No| L[Mark as Private]
+    K --> M[Save Prompt]
+    L --> M
+    M --> N[Success Page]
 ```

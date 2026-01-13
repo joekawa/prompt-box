@@ -121,6 +121,11 @@ class Prompt(BaseModel):
     description = models.TextField(blank=True)
     prompt = models.TextField()
     model = models.CharField(max_length=255)
+    visibility = models.CharField(
+        max_length=20,
+        choices=[('PRIVATE', 'Private'), ('TEAM', 'Team')],
+        default='PRIVATE'
+    )
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
