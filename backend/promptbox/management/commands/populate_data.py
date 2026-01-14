@@ -54,6 +54,8 @@ class Command(BaseCommand):
         # 6. Create Categories
         code_cat = Category.objects.create(organization=acme_org, name='Coding', description='Code generation prompts')
         email_cat = Category.objects.create(organization=acme_org, name='Email', description='Email templates')
+        hr_cat = Category.objects.create(organization=acme_org, name='HR', description='Human Resources related prompts')
+        sales_cat = Category.objects.create(organization=acme_org, name='Sales', description='Sales scripts and objections')
 
         # 7. Create Prompts
         # Prompt 1: Coding (Shared with Engineering)
@@ -63,7 +65,8 @@ class Command(BaseCommand):
             name='Python API Boilerplate',
             description='Generates a basic Django API view',
             prompt='Create a Django ViewSet for model X...',
-            model='gpt-4'
+            model='gpt-4',
+            visibility='PRIVATE'
         )
         PromptCategory.objects.create(prompt=prompt1, category=code_cat)
         TeamPrompt.objects.create(team=eng_team, prompt=prompt1)
@@ -75,9 +78,11 @@ class Command(BaseCommand):
             name='Cold Email Generator',
             description='Generate sales outreach emails',
             prompt='Write a cold email to a CTO about...',
-            model='gpt-3.5-turbo'
+            model='gpt-3.5-turbo',
+            visibility='TEAM'
         )
         PromptCategory.objects.create(prompt=prompt2, category=email_cat)
+        PromptCategory.objects.create(prompt=prompt2, category=sales_cat)
         TeamPrompt.objects.create(team=mkt_team, prompt=prompt2)
 
         # Prompt 3: General (Private to Admin initially)
@@ -87,7 +92,8 @@ class Command(BaseCommand):
             name='Q3 Strategy Draft',
             description='Drafting the strategy doc',
             prompt='Outline the key objectives for Q3...',
-            model='gpt-4'
+            model='gpt-4',
+            visibility='PRIVATE'
         )
         # Not shared with any team yet
 
@@ -96,3 +102,8 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS('  - admin@acme.com / password123'))
         self.stdout.write(self.style.SUCCESS('  - dev@acme.com / password123'))
         self.stdout.write(self.style.SUCCESS('  - marketing@acme.com / password123'))
+        self.stdout.write(self.style.SUCCESS('Categories created:'))
+        self.stdout.write(self.style.SUCCESS(f'  - {code_cat.name}'))
+        self.stdout.write(self.style.SUCCESS(f'  - {email_cat.name}'))
+        self.stdout.write(self.style.SUCCESS(f'  - {hr_cat.name}'))
+        self.stdout.write(self.style.SUCCESS(f'  - {sales_cat.name}'))

@@ -60,7 +60,7 @@ curl -b cookies.txt -X POST http://localhost:8000/api/prompts/ \
     "name": "New Test Prompt",
     "prompt": "This is a test prompt content",
     "model": "gpt-4",
-    "organization": "YOUR_ORG_UUID"
+    "organization": "9292e78a-8058-4ef5-8376-356126be04fe"
   }'
 ```
 
@@ -74,3 +74,56 @@ curl -b cookies.txt -X POST http://localhost:8000/api/prompts/ \
 | GET | `/api/prompts/` | List accessible prompts |
 | POST | `/api/prompts/` | Create a new prompt |
 | GET | `/api/users/me/` | Get current user info |
+
+## 5. Advanced Create Prompt Scenarios
+
+### Create a Private Prompt
+Explicitly setting visibility to `PRIVATE`.
+```bash
+curl -b cookies.txt -X POST http://localhost:8000/api/prompts/ \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "My Private Prompt",
+    "prompt": "This is for my eyes only",
+    "model": "gpt-4",
+    "visibility": "PRIVATE",
+    "organization": "9292e78a-8058-4ef5-8376-356126be04fe"
+  }'
+```
+
+### Create a Team Shared Prompt
+Sharing a prompt with specific teams.
+```bash
+curl -b cookies.txt -X POST http://localhost:8000/api/prompts/ \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Team Shared Prompt",
+    "prompt": "Helpful for the whole team",
+    "model": "gpt-4",
+    "visibility": "TEAM",
+    "team_ids": ["73e6ea9c-39d6-425b-bf0e-d53644de9da3"],
+    "organization": "9292e78a-8058-4ef5-8376-356126be04fe"
+  }'
+```
+
+### Create a Categorized Prompt
+Adding categories to a prompt.
+```bash
+curl -b cookies.txt -X POST http://localhost:8000/api/prompts/ \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Marketing Prompt",
+    "prompt": "Write a blog post about...",
+    "model": "gpt-3.5-turbo",
+    "category_ids": ["CATEGORY_UUID_1"],
+    "organization": "YOUR_ORG_UUID"
+  }'
+```
+
+## 6. Automated Unit Tests
+We have added specific unit tests for the Prompt Creation workflow, covering visibility settings, team sharing, and categorization.
+
+**Run the prompt tests:**
+```bash
+python manage.py test promptbox.tests.test_prompts
+```
