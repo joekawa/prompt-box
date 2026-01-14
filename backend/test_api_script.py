@@ -70,5 +70,18 @@ def run_tests():
         print("❌ Failed to fetch teams")
         print_response_error(response)
 
+    # 5. List Categories
+    print("\n5. Fetching Categories...")
+    categories_url = f"{BASE_URL}/categories/"
+    response = session.get(categories_url)
+    if response.status_code == 200:
+        print("✅ Categories:")
+        data = response.json()
+        for c in data:
+            print(f" - [{c['name']}] ({c['description']})")
+    else:
+        print("❌ Failed to fetch categories")
+        print_response_error(response)
+
 if __name__ == "__main__":
     run_tests()
