@@ -8,12 +8,12 @@ from .authentication import CsrfExemptSessionAuthentication
 
 from .models import (
     Organization, User, OrganizationMember, Team, TeamMember,
-    Category, Prompt
+    Category, Prompt, Folder
 )
 from .serializers import (
     OrganizationSerializer, UserSerializer, OrganizationMemberSerializer,
     TeamSerializer, TeamMemberSerializer, CategorySerializer,
-    PromptSerializer, CreatePromptSerializer
+    PromptSerializer, CreatePromptSerializer, FolderSerializer
 )
 
 class AuthViewSet(viewsets.ViewSet):
@@ -192,6 +192,40 @@ class CategoryViewSet(viewsets.ModelViewSet):
         if org_id:
             return Category.objects.filter(organization_id=org_id)
         return Category.objects.all()
+
+class FolderViewSet(viewsets.ModelViewSet):
+    queryset = Folder.objects.all()
+    serializer_class = FolderSerializer
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CsrfExemptSessionAuthentication]
+
+    def get_queryset(self):
+        queryset = Folder.objects.all()
+        org_id = self.request.query_params.get('organization_id')
+        parent_id = self.request.query_params.get('parent_id')
+        folder_type = self.request.query_params.get('type')
+        user_id = self.request.query_params.get('user_id')
+        team_id = self.request.query_params.get('team_id')
+        root_only = self.request.query_params.get('root_only')
+
+        if org_id:
+            queryset = queryset.filter(organization_id=org_id)
+
+        if parent_id:
+            queryset = queryset.filter(parent_id=parent_id)
+        elif root_only == 'true':
+             queryset = queryset.filter(parent__isnull=True)
+
+        if folder_type:
+            queryset = queryset.filter(type=folder_type)
+
+        if user_id:
+            queryset = queryset.filter(user_id=user_id)
+
+        if team_id:
+            queryset = queryset.filter(team_id=team_id)
+
+        return queryset
 
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = User.objects.all()

@@ -117,6 +117,7 @@ class Category(BaseModel):
 class Prompt(BaseModel):
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='prompts')
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='prompts')
+    folder = models.ForeignKey('Folder', on_delete=models.SET_NULL, null=True, blank=True, related_name='prompts')
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     prompt = models.TextField()
@@ -130,6 +131,24 @@ class Prompt(BaseModel):
 
     def __str__(self):
         return self.name
+
+class Folder(BaseModel):
+    TYPE_CHOICES = [
+        ('PRIVATE', 'Private'),
+        ('PUBLIC', 'Public'),
+    ]
+
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='folders')
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    is_archived = models.BooleanField(default=False)
+    parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='children')
+    team = models.ForeignKey(Team, on_delete=models.SET_NULL, null=True, blank=True, related_name='folders')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name='folders')
+    type = models.CharField(max_length=20, choices=TYPE_CHOICES, default='PRIVATE')
+
+    def __str__(self):
+        return f"{self.name} ({self.type})"
 
 class TeamPrompt(models.Model):
     """

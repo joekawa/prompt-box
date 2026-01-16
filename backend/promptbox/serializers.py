@@ -1,8 +1,13 @@
 from rest_framework import serializers
 from .models import (
     Organization, User, OrganizationMember, Team, TeamMember,
-    Category, Prompt, TeamPrompt, PromptCategory
+    Category, Prompt, TeamPrompt, PromptCategory, Folder
 )
+
+class FolderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Folder
+        fields = '__all__'
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -81,7 +86,7 @@ class CreatePromptSerializer(serializers.ModelSerializer):
         model = Prompt
         fields = [
             'id', 'organization', 'name', 'description', 'prompt',
-            'model', 'visibility', 'category_ids', 'team_ids'
+            'model', 'visibility', 'category_ids', 'team_ids', 'folder'
         ]
 
     def create(self, validated_data):
