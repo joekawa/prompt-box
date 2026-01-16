@@ -1,6 +1,6 @@
 from django.contrib.auth import authenticate, login, logout
 from django.db.models import Q
-from rest_framework import viewsets, permissions, status, filters, views
+from rest_framework import viewsets, permissions, status, filters, views, pagination
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -15,6 +15,11 @@ from .serializers import (
     TeamSerializer, TeamMemberSerializer, CategorySerializer,
     PromptSerializer, CreatePromptSerializer, FolderSerializer
 )
+
+class StandardResultsSetPagination(pagination.PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'page_size'
+    max_page_size = 100
 
 class AuthViewSet(viewsets.ViewSet):
     """
@@ -148,10 +153,14 @@ class TeamViewSet(viewsets.ModelViewSet):
 
 class PromptViewSet(viewsets.ModelViewSet):
     queryset = Prompt.objects.all()
+    serializer_class = PromptSerializer
     permission_classes = [IsAuthenticated]
     authentication_classes = [CsrfExemptSessionAuthentication]
-    filter_backends = [filters.SearchFilter]
+    pagination_class = StandardResultsSetPagination
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['name', 'description', 'prompt', 'prompt_categories__category__name']
+    ordering_fields = ['name', 'created_at']
+    ordering = ['name']
 
     def get_serializer_class(self):
         if self.action == 'create':
@@ -163,6 +172,9 @@ class PromptViewSet(viewsets.ModelViewSet):
         queryset = Prompt.objects.all()
         org_id = self.request.query_params.get('organization_id')
         team_id = self.request.query_params.get('team_id')
+        visibility = self.request.query_params.get('visibility')
+        created_by = self.request.query_params.get('created_by')
+        folder_id = self.request.query_params.get('folder_id')
 
         if org_id:
             queryset = queryset.filter(organization_id=org_id)
@@ -170,6 +182,21 @@ class PromptViewSet(viewsets.ModelViewSet):
         if team_id:
             # Filter prompts shared with this team
             queryset = queryset.filter(shared_teams__team_id=team_id)
+
+        if visibility:
+            queryset = queryset.filter(visibility=visibility)
+
+        if created_by:
+            if created_by == 'me':
+                queryset = queryset.filter(created_by=self.request.user)
+            else:
+                queryset = queryset.filter(created_by_id=created_by)
+
+        if folder_id:
+            if folder_id == 'root':
+                queryset = queryset.filter(folder__isnull=True)
+            else:
+                queryset = queryset.filter(folder_id=folder_id)
 
         # In a real scenario, we would also filter by:
         # 1. Prompts created by the user (My Prompts)

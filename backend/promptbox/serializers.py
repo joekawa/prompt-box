@@ -70,7 +70,7 @@ class PromptSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'organization', 'created_by', 'created_by_name', 'name',
             'description', 'prompt', 'model', 'visibility', 'is_active',
-            'created_at', 'updated_at', 'categories', 'shared_teams'
+            'created_at', 'updated_at', 'categories', 'shared_teams', 'folder'
         ]
 
 class CreatePromptSerializer(serializers.ModelSerializer):

@@ -10,6 +10,17 @@ const getHeaders = () => {
 
 export const api = {
   // Prompts
+  getPrompts: async (params = {}) => {
+    console.log('API: Fetching prompts', params);
+    const queryString = new URLSearchParams(params).toString();
+    const response = await fetch(`${API_BASE_URL}/prompts/?${queryString}`, {
+      headers: getHeaders(),
+      credentials: 'include',
+    });
+    if (!response.ok) throw new Error('Failed to fetch prompts');
+    return response.json();
+  },
+
   createPrompt: async (promptData) => {
     console.log('API: Creating prompt with data:', promptData);
     const response = await fetch(`${API_BASE_URL}/prompts/`, {

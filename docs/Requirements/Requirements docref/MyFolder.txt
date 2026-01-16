@@ -1,0 +1,9 @@
+My Folder Page
+
+As a user, I want to see a list of all private prompts that
+I have created sorted alphabetically so that
+I can easily find the prompt I am looking for.
+
+- The list should be sorted alphabetically by prompt name.
+- The list should be paginated to show 10 prompts per page.
+- The list should include the prompt name, description, model, and created at date.

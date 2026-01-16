@@ -20,7 +20,7 @@ const Sidebar = () => {
   const menuItems = [
     { icon: <Home size={20} />, label: 'Home', path: '/dashboard' },
     { icon: <PlusCircle size={20} />, label: 'Create Prompt', path: '/dashboard/create-prompt' },
-    { icon: <Folder size={20} />, label: 'My Folder', path: '/dashboard/private' },
+    { icon: <Folder size={20} />, label: 'My Folder', path: '/my-folder' },
     { icon: <Globe size={20} />, label: 'Public Folder', path: '/dashboard/public' },
     { icon: <Users size={20} />, label: 'Manage Teams', path: '/dashboard/teams' },
     { icon: <UserCog size={20} />, label: 'Manage Users', path: '/dashboard/users' },

@@ -6,6 +6,7 @@ import LoginPage from './components/pages/LoginPage';
 import SalesPage from './components/pages/SalesPage';
 import DashboardPage from './components/pages/DashboardPage';
 import CreatePromptPage from './components/pages/CreatePromptPage';
+import MyFolderPage from './components/pages/MyFolderPage';
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
           <Route path="/sales" element={<SalesPage />} />
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/dashboard/create-prompt" element={<CreatePromptPage />} />
+          <Route path="/my-folder" element={<MyFolderPage />} />
         </Routes>
       </div>
     </Router>
