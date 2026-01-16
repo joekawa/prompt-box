@@ -142,13 +142,97 @@ export const api = {
   },
 
   // Teams
-  getTeams: async () => {
-    console.log('API: Fetching teams');
-    const response = await fetch(`${API_BASE_URL}/teams/`, {
+  getTeams: async (params = {}) => {
+    console.log('API: Fetching teams', params);
+    const queryString = new URLSearchParams(params).toString();
+    const response = await fetch(`${API_BASE_URL}/teams/?${queryString}`, {
       headers: getHeaders(),
       credentials: 'include',
     });
     if (!response.ok) throw new Error('Failed to fetch teams');
+    return response.json();
+  },
+
+  createTeam: async (teamData) => {
+    console.log('API: Creating team', teamData);
+    const response = await fetch(`${API_BASE_URL}/teams/`, {
+      method: 'POST',
+      headers: getHeaders(),
+      credentials: 'include',
+      body: JSON.stringify(teamData),
+    });
+    if (!response.ok) throw new Error('Failed to create team');
+    return response.json();
+  },
+
+  updateTeam: async (id, teamData) => {
+    console.log(`API: Updating team ${id}`, teamData);
+    const response = await fetch(`${API_BASE_URL}/teams/${id}/`, {
+      method: 'PATCH',
+      headers: getHeaders(),
+      credentials: 'include',
+      body: JSON.stringify(teamData),
+    });
+    if (!response.ok) throw new Error('Failed to update team');
+    return response.json();
+  },
+
+  deleteTeam: async (id) => {
+    console.log(`API: Deleting team ${id}`);
+    const response = await fetch(`${API_BASE_URL}/teams/${id}/`, {
+      method: 'DELETE',
+      headers: getHeaders(),
+      credentials: 'include',
+    });
+    if (!response.ok) throw new Error('Failed to delete team');
+    return true;
+  },
+
+  getTeamMembers: async (teamId) => {
+    console.log(`API: Fetching members for team ${teamId}`);
+    const response = await fetch(`${API_BASE_URL}/teams/${teamId}/members/`, {
+      headers: getHeaders(),
+      credentials: 'include',
+    });
+    if (!response.ok) throw new Error('Failed to fetch team members');
+    return response.json();
+  },
+
+  addTeamMember: async (teamId, userId, role = 'MEMBER') => {
+    console.log(`API: Adding user ${userId} to team ${teamId}`);
+    const response = await fetch(`${API_BASE_URL}/teams/${teamId}/add_member/`, {
+      method: 'POST',
+      headers: getHeaders(),
+      credentials: 'include',
+      body: JSON.stringify({ user_id: userId, role }),
+    });
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to add team member');
+    }
+    return response.json();
+  },
+
+  removeTeamMember: async (teamId, userId) => {
+    console.log(`API: Removing user ${userId} from team ${teamId}`);
+    const response = await fetch(`${API_BASE_URL}/teams/${teamId}/remove_member/`, {
+      method: 'POST',
+      headers: getHeaders(),
+      credentials: 'include',
+      body: JSON.stringify({ user_id: userId }),
+    });
+    if (!response.ok) throw new Error('Failed to remove team member');
+    return response.json();
+  },
+
+  // Organization Members (needed for adding to team)
+  getOrganizationMembers: async (orgId) => {
+    console.log(`API: Fetching members for org ${orgId}`);
+    const response = await fetch(`${API_BASE_URL}/organizations/${orgId}/members/`, {
+        headers: getHeaders(),
+        credentials: 'include',
+    });
+    if (!response.ok) throw new Error('Failed to fetch organization members');
     return response.json();
   },
 
