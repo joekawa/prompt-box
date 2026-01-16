@@ -322,6 +322,16 @@ const CreatePromptPage = () => {
                 />
                 Team
               </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                <input
+                  type="radio"
+                  name="visibility"
+                  value="PUBLIC"
+                  checked={formData.visibility === 'PUBLIC'}
+                  onChange={handleChange}
+                />
+                Public
+              </label>
             </div>
           </div>
 

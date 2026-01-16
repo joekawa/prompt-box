@@ -7,6 +7,7 @@ import SalesPage from './components/pages/SalesPage';
 import DashboardPage from './components/pages/DashboardPage';
 import CreatePromptPage from './components/pages/CreatePromptPage';
 import MyFolderPage from './components/pages/MyFolderPage';
+import PublicFolderPage from './components/pages/PublicFolderPage';
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/dashboard/create-prompt" element={<CreatePromptPage />} />
           <Route path="/my-folder" element={<MyFolderPage />} />
+          <Route path="/dashboard/public" element={<PublicFolderPage />} />
         </Routes>
       </div>
     </Router>

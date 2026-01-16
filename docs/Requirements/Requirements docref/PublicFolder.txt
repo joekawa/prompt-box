@@ -1,0 +1,14 @@
+Public Folder
+
+As a user, I want to see a list of all public prompts that
+have been created by other users in my organization so that I
+can find and use them.
+
+- The list should be sorted alphabetically by prompt name.
+- The list should be paginated to show 10 prompts per page.
+- The list should include the prompt name, description, model, and created at date.
+- Users should be able to create a folder in the public folder
+- Users should be able to move a prompt to a folder in the public folder
+- Users should be able to delete a folder in the public folder
+- Users should be able to delete a prompt in the public folder
+- Folders should display first in the list, then prompts.

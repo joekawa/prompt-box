@@ -169,7 +169,11 @@ class PromptViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         # Filter by organization
-        queryset = Prompt.objects.all()
+        user = self.request.user
+        # Restrict to organizations the user is a member of
+        user_org_ids = OrganizationMember.objects.filter(user=user).values_list('organization_id', flat=True)
+        queryset = Prompt.objects.filter(organization_id__in=user_org_ids)
+
         org_id = self.request.query_params.get('organization_id')
         team_id = self.request.query_params.get('team_id')
         visibility = self.request.query_params.get('visibility')
@@ -225,9 +229,18 @@ class FolderViewSet(viewsets.ModelViewSet):
     serializer_class = FolderSerializer
     permission_classes = [IsAuthenticated]
     authentication_classes = [CsrfExemptSessionAuthentication]
+    filter_backends = [filters.OrderingFilter]
+    ordering_fields = ['name', 'created_at']
+    ordering = ['name']
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
 
     def get_queryset(self):
-        queryset = Folder.objects.all()
+        user = self.request.user
+        user_org_ids = OrganizationMember.objects.filter(user=user).values_list('organization_id', flat=True)
+        queryset = Folder.objects.filter(organization_id__in=user_org_ids)
+
         org_id = self.request.query_params.get('organization_id')
         parent_id = self.request.query_params.get('parent_id')
         folder_type = self.request.query_params.get('type')

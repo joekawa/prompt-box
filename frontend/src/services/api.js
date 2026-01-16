@@ -37,6 +37,29 @@ export const api = {
     return response.json();
   },
 
+  updatePrompt: async (id, promptData) => {
+    console.log(`API: Updating prompt ${id}`, promptData);
+    const response = await fetch(`${API_BASE_URL}/prompts/${id}/`, {
+      method: 'PATCH',
+      headers: getHeaders(),
+      credentials: 'include',
+      body: JSON.stringify(promptData),
+    });
+    if (!response.ok) throw new Error('Failed to update prompt');
+    return response.json();
+  },
+
+  deletePrompt: async (id) => {
+    console.log(`API: Deleting prompt ${id}`);
+    const response = await fetch(`${API_BASE_URL}/prompts/${id}/`, {
+      method: 'DELETE',
+      headers: getHeaders(),
+      credentials: 'include',
+    });
+    if (!response.ok) throw new Error('Failed to delete prompt');
+    return true;
+  },
+
   // Categories
   getCategories: async () => {
     console.log('API: Fetching categories');
@@ -82,6 +105,29 @@ export const api = {
     });
     if (!response.ok) throw new Error('Failed to create folder');
     return response.json();
+  },
+
+  updateFolder: async (id, folderData) => {
+    console.log(`API: Updating folder ${id}`, folderData);
+    const response = await fetch(`${API_BASE_URL}/folders/${id}/`, {
+      method: 'PATCH',
+      headers: getHeaders(),
+      credentials: 'include',
+      body: JSON.stringify(folderData),
+    });
+    if (!response.ok) throw new Error('Failed to update folder');
+    return response.json();
+  },
+
+  deleteFolder: async (id) => {
+    console.log(`API: Deleting folder ${id}`);
+    const response = await fetch(`${API_BASE_URL}/folders/${id}/`, {
+      method: 'DELETE',
+      headers: getHeaders(),
+      credentials: 'include',
+    });
+    if (!response.ok) throw new Error('Failed to delete folder');
+    return true;
   },
 
   // Organizations

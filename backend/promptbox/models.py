@@ -124,7 +124,7 @@ class Prompt(BaseModel):
     model = models.CharField(max_length=255)
     visibility = models.CharField(
         max_length=20,
-        choices=[('PRIVATE', 'Private'), ('TEAM', 'Team')],
+        choices=[('PRIVATE', 'Private'), ('TEAM', 'Team'), ('PUBLIC', 'Public')],
         default='PRIVATE'
     )
     is_active = models.BooleanField(default=True)
