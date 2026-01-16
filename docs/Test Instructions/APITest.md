@@ -16,6 +16,8 @@ We have a management command to populate the database with sample data (Organiza
 python manage.py populate_data
 ```
 
+> **Note:** This command deletes all existing users and sessions. You **must** re-login (Section 3) after running this command to generate a valid `cookies.txt`.
+
 ### Test Credentials
 | Role | Email | Password | Description |
 |---|---|---|---|
@@ -60,7 +62,7 @@ curl -b cookies.txt -X POST http://localhost:8000/api/prompts/ \
     "name": "New Test Prompt",
     "prompt": "This is a test prompt content",
     "model": "gpt-4",
-    "organization": "9292e78a-8058-4ef5-8376-356126be04fe"
+    "organization": "13dc9aa5-634a-4fd7-8cfa-32c4d2e12e74"
   }'
 ```
 
@@ -115,8 +117,10 @@ curl -b cookies.txt -X POST http://localhost:8000/api/prompts/ \
     "name": "Marketing Prompt",
     "prompt": "Write a blog post about...",
     "model": "gpt-3.5-turbo",
-    "category_ids": ["CATEGORY_UUID_1"],
-    "organization": "YOUR_ORG_UUID"
+    "visibility": "TEAM",
+    "category_ids": ["51a86ebc-95e0-4cfb-8275-44cd8e9e30c1"],
+    "team_ids": ["d807383e-c1fd-4bd4-8e01-14e6b870a925"],
+    "organization": "13dc9aa5-634a-4fd7-8cfa-32c4d2e12e74"
   }'
 ```
 

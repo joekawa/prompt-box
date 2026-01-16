@@ -16,5 +16,11 @@ erDiagram
     PROMPT }o--|| USER : created_by
     PROMPT ||--o{ PROMPT_CATEGORY : classified_as
     CATEGORY ||--o{ PROMPT_CATEGORY : includes
+    ORGANIZATION || --o{ FOLDER : owns
+    TEAM ||--o{ FOLDER : has
+    USER ||--o{ FOLDER : has
+    FOLDER ||--o{ PROMPT : includes
+    FOLDER ||--o{ FOLDER : parent_of
+    FOLDER ||--o{ PROMPT : includes
 
 ```

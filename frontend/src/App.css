@@ -240,6 +240,45 @@ body {
   color: var(--secondary-color);
 }
 
+.page-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin-bottom: 32px;
+  text-align: center;
+}
+
+.text-secondary {
+  color: var(--secondary-color);
+  font-size: 0.875rem;
+  display: block;
+  margin-top: 4px;
+}
+
+.create-prompt-form {
+  width: 100%;
+  max-width: 800px;
+  background-color: white;
+  padding: 32px;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  text-align: left;
+}
+
+.success-message {
+  background-color: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #047857;
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  font-size: 0.875rem;
+  text-align: center;
+  width: 100%;
+  max-width: 800px;
+  box-sizing: border-box;
+}
+
 .link-text {
   color: var(--accent-color);
   text-decoration: none;

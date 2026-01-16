@@ -17,7 +17,9 @@ flowchart TD
     I --> J{Share with Team}
     J -->|Yes| K[Select Target Team]
     J -->|No| L[Mark as Private]
-    K --> M[Save Prompt]
-    L --> M
-    M --> N[Success Page]
+    K --> M[Select Team Folder]
+    M --> N[Save Prompt]
+    L --> P[Select Private Folder]
+    P --> N
+    N --> O[Success Page]
 ```

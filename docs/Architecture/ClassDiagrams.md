@@ -73,6 +73,7 @@ classDiagram
   class Prompt {
     +id: UUID
     +organization_id: UUID
+    +folder_id: UUID
     +name: str
     +description: str
     +prompt: str
@@ -99,4 +100,22 @@ classDiagram
     +created_at: datetime
     +updated_at: datetime
   }
+  class Folder{
+    +id: UUID
+    +organization_id: UUID
+    +name: str
+    +description: str
+    +is_archived: bool
+    +created_at: datetime
+    +updated_at: datetime
+    +parent_id: UUID
+    +team_id: UUID
+    +user_id: UUID
+    +type: str
+  }
+  Folder "1" -- "*" Prompt : includes
+  Folder "1" -- "*" Folder : includes
+  Team "1" -- "*" Folder : has
+  Organization "1" -- "*" Folder : owns
+  User "1" -- "*" Folder : has
 ```
