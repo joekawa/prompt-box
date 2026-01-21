@@ -34,13 +34,15 @@ class Command(BaseCommand):
 
         # 2. Create Organization
         acme_org = Organization.objects.create(name='Acme Corp', description='The Coyote Catchers')
+        # Business Rule 1: Default team 'Acme Corp' is automatically created.
 
         # 3. Add Members to Organization
+        # Business Rule 2: Members are automatically added to the default team.
         OrganizationMember.objects.create(organization=acme_org, user=admin_user, role='ADMIN')
         OrganizationMember.objects.create(organization=acme_org, user=dev_user, role='MEMBER')
         OrganizationMember.objects.create(organization=acme_org, user=marketing_user, role='MEMBER')
 
-        # 4. Create Teams
+        # 4. Create Teams (Additional teams)
         eng_team = Team.objects.create(organization=acme_org, name='Engineering', description='Software Engineering Team')
         mkt_team = Team.objects.create(organization=acme_org, name='Marketing', description='Marketing & Sales')
 
@@ -50,6 +52,15 @@ class Command(BaseCommand):
         # Admin is in both
         TeamMember.objects.create(team=eng_team, user=admin_user, role='OWNER')
         TeamMember.objects.create(team=mkt_team, user=admin_user, role='OWNER')
+
+        # --- New Organization for Testing Business Rules ---
+        globex_org = Organization.objects.create(name='Globex Corporation', description='We move the world')
+        hank_user = User.objects.create_user(email='hank@globex.com', password='password123', name='Hank Scorpio')
+        homer_user = User.objects.create_user(email='homer@globex.com', password='password123', name='Homer Simpson')
+
+        # Adding members will auto-add them to 'Globex Corporation' team
+        OrganizationMember.objects.create(organization=globex_org, user=hank_user, role='ADMIN')
+        OrganizationMember.objects.create(organization=globex_org, user=homer_user, role='MEMBER')
 
         # 6. Create Categories
         code_cat = Category.objects.create(organization=acme_org, name='Coding', description='Code generation prompts')

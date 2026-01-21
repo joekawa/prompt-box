@@ -87,15 +87,14 @@ const MyFolderPage = () => {
     <div className="dashboard-container">
       <Sidebar />
       <main className="main-content">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', width: '100%' }}>
           <div>
-            <h1 className="page-title">My Private Folder</h1>
+            <h1 className="page-title" style={{ marginBottom: '8px' }}>My Private Folder</h1>
             <p className="text-secondary">Manage your private prompts</p>
           </div>
           <button
             className="btn-primary"
             onClick={() => navigate('/dashboard/create-prompt')}
-            style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
           >
             <Plus size={18} /> New Prompt
           </button>
@@ -108,11 +107,11 @@ const MyFolderPage = () => {
         )}
 
         {isLoading ? (
-          <div style={{ display: 'flex', justifyContent: 'center', padding: '40px' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '40px', width: '100%' }}>
             <p>Loading...</p>
           </div>
         ) : (
-          <div className="content-card">
+          <div className="content-card" style={{ width: '100%' }}>
             <div className="table-container">
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>

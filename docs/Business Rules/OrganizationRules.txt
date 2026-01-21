@@ -1,0 +1,6 @@
+Business Rules
+
+1. When an organization is created,
+a default team is created with the name of the organization.
+For example, if the organization is named "My Organization", then a team named "My Organization" is created.
+2. Each user that is a member of an organization is automatically a member of the default team.

@@ -81,6 +81,34 @@ npm test -- --coverage --watchAll=false
     *   "Contact Sales" heading is visible.
     *   "Back to Home" button works and redirects to `/`.
 
+### 4. Manage Teams Page
+**Goal**: Verify team management functionality (Create, Read, Update, Delete, Manage Members).
+
+1.  **Login** as an Admin (e.g., `admin@acme.com`).
+2.  Navigate to `/dashboard/teams` (or click "Manage Teams" in sidebar).
+3.  **Verify List**:
+    *   Teams are listed alphabetically.
+    *   Columns: Team Name, Description, Created At, Actions.
+    *   Pagination controls appear if more than 10 teams.
+4.  **Create Team**:
+    *   Click "Create Team".
+    *   Enter Name and Description.
+    *   Click "Create Team".
+    *   Verify the new team appears in the list.
+5.  **Edit Team**:
+    *   Click the Edit icon (pencil) on a team.
+    *   Change the name or description.
+    *   Click "Save Changes".
+    *   Verify the updates are reflected in the list.
+6.  **Manage Members**:
+    *   Click the Users icon on a team.
+    *   **Add**: Enter an email of an existing organization member (e.g., `dev@acme.com`) and click "Add". Verify user appears in list.
+    *   **Remove**: Click "Remove" next to a user. Verify user is removed.
+7.  **Delete Team**:
+    *   Click the Delete icon (trash can) on a team.
+    *   Confirm the dialog.
+    *   Verify the team is removed from the list.
+
 ## Directory Structure
 
 Tests should be co-located with the components they test or placed in a `__tests__` directory.
@@ -91,4 +119,17 @@ src/
     pages/
       WelcomePage.js
       WelcomePage.test.js  <-- Recommended location
+
+## Test Users
+
+The following users are available after running `python3 backend/manage.py populate_data`:
+
+### Acme Corp
+*   **Admin**: admin@acme.com / password123
+*   **Developer**: dev@acme.com / password123
+*   **Marketing**: marketing@acme.com / password123
+
+### Globex Corporation
+*   **Admin**: hank@globex.com / password123
+*   **Member**: homer@globex.com / password123
 ```

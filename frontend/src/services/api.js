@@ -207,8 +207,8 @@ export const api = {
       body: JSON.stringify({ user_id: userId, role }),
     });
     if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to add team member');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to add team member');
     }
     return response.json();
   },
@@ -216,23 +216,13 @@ export const api = {
   removeTeamMember: async (teamId, userId) => {
     console.log(`API: Removing user ${userId} from team ${teamId}`);
     const response = await fetch(`${API_BASE_URL}/teams/${teamId}/remove_member/`, {
-      method: 'POST',
+      method: 'POST', // Using POST as per ViewSet action default, though DELETE is more RESTful. ViewSet action defaults to POST if not specified or unless detail=True which supports it. Let's check ViewSet.
+      // ViewSet action defaults to POST.
       headers: getHeaders(),
       credentials: 'include',
       body: JSON.stringify({ user_id: userId }),
     });
     if (!response.ok) throw new Error('Failed to remove team member');
-    return response.json();
-  },
-
-  // Organization Members (needed for adding to team)
-  getOrganizationMembers: async (orgId) => {
-    console.log(`API: Fetching members for org ${orgId}`);
-    const response = await fetch(`${API_BASE_URL}/organizations/${orgId}/members/`, {
-        headers: getHeaders(),
-        credentials: 'include',
-    });
-    if (!response.ok) throw new Error('Failed to fetch organization members');
     return response.json();
   },
 

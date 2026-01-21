@@ -102,8 +102,7 @@ class TeamViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     authentication_classes = [CsrfExemptSessionAuthentication]
     pagination_class = StandardResultsSetPagination
-    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
-    search_fields = ['name', 'description']
+    filter_backends = [filters.OrderingFilter]
     ordering_fields = ['name', 'created_at']
     ordering = ['name']
 

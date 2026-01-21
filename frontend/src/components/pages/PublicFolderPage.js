@@ -209,23 +209,21 @@ const PublicFolderPage = () => {
     <div className="dashboard-container">
       <Sidebar />
       <main className="main-content">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', width: '100%' }}>
           <div>
-            <h1 className="page-title">Public Folder</h1>
+            <h1 className="page-title" style={{ marginBottom: '8px' }}>Public Folder</h1>
             <p className="text-secondary">Explore prompts shared by your organization</p>
           </div>
           <div style={{ display: 'flex', gap: '12px' }}>
             <button
                 className="btn-secondary"
                 onClick={() => setShowCreateFolderModal(true)}
-                style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
             >
                 <FolderPlus size={18} /> New Folder
             </button>
             <button
                 className="btn-primary"
                 onClick={() => navigate('/dashboard/create-prompt')}
-                style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
             >
                 <Plus size={18} /> New Prompt
             </button>
@@ -233,7 +231,7 @@ const PublicFolderPage = () => {
         </div>
 
         {/* Breadcrumbs */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px', fontSize: '0.9rem', color: '#4b5563' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px', fontSize: '0.9rem', color: '#4b5563', width: '100%' }}>
             <span
                 style={{ cursor: 'pointer', fontWeight: currentFolderId === null ? 600 : 400 }}
                 onClick={() => handleBreadcrumbClick(-1)}
@@ -260,11 +258,11 @@ const PublicFolderPage = () => {
         )}
 
         {isLoading ? (
-          <div style={{ display: 'flex', justifyContent: 'center', padding: '40px' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '40px', width: '100%' }}>
             <p>Loading...</p>
           </div>
         ) : (
-          <div className="content-card">
+          <div className="content-card" style={{ width: '100%' }}>
             <div className="table-container">
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
