@@ -9,6 +9,7 @@ import CreatePromptPage from './components/pages/CreatePromptPage';
 import MyFolderPage from './components/pages/MyFolderPage';
 import PublicFolderPage from './components/pages/PublicFolderPage';
 import ManageTeamsPage from './components/pages/ManageTeamsPage';
+import ManageUsersPage from './components/pages/ManageUsersPage';
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
           <Route path="/my-folder" element={<MyFolderPage />} />
           <Route path="/dashboard/public" element={<PublicFolderPage />} />
           <Route path="/dashboard/teams" element={<ManageTeamsPage />} />
+          <Route path="/dashboard/users" element={<ManageUsersPage />} />
         </Routes>
       </div>
     </Router>

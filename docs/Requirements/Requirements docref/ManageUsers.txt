@@ -7,8 +7,8 @@ Prompt Box instance
 - The list should be sorted alphabetically by user name
 - The list should be paginated to show 10 users per page
 - The list should include the user name, assigned teams, and created at date
-- Users should be able to create a user
-- Users should be able to update a user
-- Users should be able to delete a user (soft delete)
-- Users should be able to assign users to a team
-- Users should be able to remove users from a team
+- Users should be able to create a user from the ManageUsers flow
+- Users should be able to update a user from the ManageUsers flow
+- Users should be able to delete a user (soft delete) from the ManageUsers flow
+- Users should be able to assign users to a team from the ManageUsers flow
+- Users should be able to remove users from a team from the ManageUsers flow

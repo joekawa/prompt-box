@@ -235,5 +235,95 @@ export const api = {
     });
     if (!response.ok) throw new Error('Failed to fetch user');
     return response.json();
-  }
+  },
+
+  getUsers: async (params = {}) => {
+    console.log('API: Fetching users', params);
+    const queryString = new URLSearchParams(params).toString();
+    const response = await fetch(`${API_BASE_URL}/users/?${queryString}`, {
+      headers: getHeaders(),
+      credentials: 'include',
+    });
+    if (!response.ok) throw new Error('Failed to fetch users');
+    return response.json();
+  },
+
+  createUser: async (userData) => {
+    console.log('API: Creating user', userData);
+    const response = await fetch(`${API_BASE_URL}/users/`, {
+      method: 'POST',
+      headers: getHeaders(),
+      credentials: 'include',
+      body: JSON.stringify(userData),
+    });
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('API: Create user failed', errorData);
+      throw new Error(errorData.detail || errorData.non_field_errors || JSON.stringify(errorData) || 'Failed to create user');
+    }
+    return response.json();
+  },
+
+  updateUser: async (id, userData) => {
+    console.log(`API: Updating user ${id}`, userData);
+    const response = await fetch(`${API_BASE_URL}/users/${id}/`, {
+      method: 'PATCH',
+      headers: getHeaders(),
+      credentials: 'include',
+      body: JSON.stringify(userData),
+    });
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('API: Update user failed', errorData);
+      throw new Error(errorData.detail || JSON.stringify(errorData) || 'Failed to update user');
+    }
+    return response.json();
+  },
+
+  deleteUser: async (id, organizationId) => {
+    console.log(`API: Deleting (soft) user ${id}`);
+    const response = await fetch(`${API_BASE_URL}/users/${id}/?organization_id=${organizationId}`, {
+      method: 'DELETE',
+      headers: getHeaders(),
+      credentials: 'include',
+    });
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('API: Delete user failed', errorData);
+      throw new Error(errorData.error || 'Failed to delete user');
+    }
+    return true;
+  },
+
+  assignUserTeam: async (userId, teamId) => {
+    console.log(`API: Assigning user ${userId} to team ${teamId}`);
+    const response = await fetch(`${API_BASE_URL}/users/${userId}/assign_team/`, {
+      method: 'POST',
+      headers: getHeaders(),
+      credentials: 'include',
+      body: JSON.stringify({ team_id: teamId }),
+    });
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('API: Assign team failed', errorData);
+      throw new Error(errorData.error || 'Failed to assign team');
+    }
+    return response.json();
+  },
+
+  removeUserTeam: async (userId, teamId) => {
+    console.log(`API: Removing user ${userId} from team ${teamId}`);
+    const response = await fetch(`${API_BASE_URL}/users/${userId}/remove_team/`, {
+      method: 'POST',
+      headers: getHeaders(),
+      credentials: 'include',
+      body: JSON.stringify({ team_id: teamId }),
+    });
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('API: Remove team failed', errorData);
+      throw new Error(errorData.error || 'Failed to remove team');
+    }
+    return response.json();
+  },
 };

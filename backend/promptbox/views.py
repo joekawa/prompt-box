@@ -2,6 +2,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.db.models import Q
 from rest_framework import viewsets, permissions, status, filters, views, pagination
 from rest_framework.decorators import action
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from .authentication import CsrfExemptSessionAuthentication
@@ -13,7 +14,8 @@ from .models import (
 from .serializers import (
     OrganizationSerializer, UserSerializer, OrganizationMemberSerializer,
     TeamSerializer, TeamMemberSerializer, CategorySerializer,
-    PromptSerializer, CreatePromptSerializer, FolderSerializer
+    PromptSerializer, CreatePromptSerializer, FolderSerializer,
+    UserManageSerializer, UserCreateSerializer, UserUpdateSerializer
 )
 
 class StandardResultsSetPagination(pagination.PageNumberPagination):
@@ -271,13 +273,145 @@ class FolderViewSet(viewsets.ModelViewSet):
 
         return queryset
 
-class UserViewSet(viewsets.ReadOnlyModelViewSet):
+class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
-    serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
     authentication_classes = [CsrfExemptSessionAuthentication]
+    pagination_class = StandardResultsSetPagination
+    filter_backends = [filters.OrderingFilter]
+    ordering_fields = ['name', 'created_at']
+    ordering = ['name']
+
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return UserCreateSerializer
+        if self.action in ['update', 'partial_update']:
+            return UserUpdateSerializer
+        if self.action == 'me':
+            return UserSerializer
+        return UserManageSerializer
+
+    def get_queryset(self):
+        request_user = self.request.user
+        user_org_ids = OrganizationMember.objects.filter(user=request_user).values_list('organization_id', flat=True)
+        queryset = User.objects.filter(
+            is_active=True,
+            organization_memberships__organization_id__in=user_org_ids,
+        ).distinct()
+
+        org_id = self.request.query_params.get('organization_id')
+        if org_id:
+            queryset = queryset.filter(organization_memberships__organization_id=org_id)
+
+        return queryset
+
+    def _require_admin(self, organization_id):
+        if not OrganizationMember.objects.filter(
+            organization_id=organization_id,
+            user=self.request.user,
+            role='ADMIN',
+        ).exists():
+            return Response({'error': 'Admin role required'}, status=status.HTTP_403_FORBIDDEN)
+        return None
+
+    def _get_shared_organization_id(self, target_user):
+        org_id = self.request.data.get('organization_id') or self.request.query_params.get('organization_id')
+        if org_id:
+            return org_id
+
+        request_org_ids = set(OrganizationMember.objects.filter(user=self.request.user).values_list('organization_id', flat=True))
+        target_org_ids = OrganizationMember.objects.filter(user=target_user).values_list('organization_id', flat=True)
+        for candidate in target_org_ids:
+            if candidate in request_org_ids:
+                return str(candidate)
+        return None
+
+    def perform_update(self, serializer):
+        org_id = self._get_shared_organization_id(self.get_object())
+        if org_id:
+            forbidden = self._require_admin(org_id)
+            if forbidden is not None:
+                raise PermissionDenied(forbidden.data.get('error'))
+        serializer.save()
+
+    def destroy(self, request, *args, **kwargs):
+        user = self.get_object()
+        org_id = self._get_shared_organization_id(user)
+        if not org_id:
+            return Response({'error': 'organization_id is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        forbidden = self._require_admin(org_id)
+        if forbidden is not None:
+            return forbidden
+
+        user.is_active = False
+        user.save(update_fields=['is_active'])
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=False, methods=['get'])
     def me(self, request):
         serializer = self.get_serializer(request.user)
         return Response(serializer.data)
+
+    @action(detail=True, methods=['post'])
+    def assign_team(self, request, pk=None):
+        user = self.get_object()
+        team_id = request.data.get('team_id')
+        if not team_id:
+            return Response({'error': 'team_id is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            team = Team.objects.get(id=team_id, is_active=True)
+        except Team.DoesNotExist:
+            return Response({'error': 'Team not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        forbidden = self._require_admin(str(team.organization_id))
+        if forbidden is not None:
+            return forbidden
+
+        if not OrganizationMember.objects.filter(organization=team.organization, user=user).exists():
+            return Response({'error': 'User is not a member of the organization'}, status=status.HTTP_400_BAD_REQUEST)
+
+        membership, created = TeamMember.objects.get_or_create(
+            team=team,
+            user=user,
+            defaults={'role': 'MEMBER', 'is_active': True},
+        )
+        if not created and not membership.is_active:
+            membership.is_active = True
+            membership.save(update_fields=['is_active'])
+
+        return Response({'status': 'team assigned'})
+
+    @action(detail=True, methods=['post'])
+    def remove_team(self, request, pk=None):
+        user = self.get_object()
+        team_id = request.data.get('team_id')
+        if not team_id:
+            return Response({'error': 'team_id is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            team = Team.objects.get(id=team_id, is_active=True)
+        except Team.DoesNotExist:
+            return Response({'error': 'Team not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        forbidden = self._require_admin(str(team.organization_id))
+        if forbidden is not None:
+            return forbidden
+
+        membership = TeamMember.objects.filter(team=team, user=user, is_active=True).first()
+        if membership is None:
+            return Response({'error': 'User is not a member of the team'}, status=status.HTTP_404_NOT_FOUND)
+
+        active_team_count = TeamMember.objects.filter(
+            user=user,
+            is_active=True,
+            team__organization=team.organization,
+            team__is_active=True,
+        ).count()
+        if active_team_count <= 1:
+            return Response({'error': 'User must be assigned to at least one team'}, status=status.HTTP_400_BAD_REQUEST)
+
+        membership.is_active = False
+        membership.save(update_fields=['is_active'])
+        return Response({'status': 'team removed'})

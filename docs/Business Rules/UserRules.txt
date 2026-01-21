@@ -1,0 +1,6 @@
+Business Rules
+
+1. When a user is created, they are assigned to the default team of their organization.
+2. When a user is deleted, they are soft deleted.
+3. A user must be assigned to at least one organization.
+4. A user must be assigned to at least one team.
