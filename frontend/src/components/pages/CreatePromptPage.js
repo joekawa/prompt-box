@@ -36,16 +36,18 @@ const CreatePromptPage = () => {
   const fetchInitialData = async () => {
     try {
       console.log('Page: Fetching initial data...');
-      const [catsData, teamsData, orgsData] = await Promise.all([
+      const [catsData, teamsData, orgsData, foldersData] = await Promise.all([
         api.getCategories(),
         api.getTeams(),
-        api.getOrganizations()
+        api.getOrganizations(),
+        api.getFolders()
       ]);
 
-      console.log('Page: Data fetched:', { catsData, teamsData, orgsData });
+      console.log('Page: Data fetched:', { catsData, teamsData, orgsData, foldersData });
 
       setCategories(catsData);
-      setTeams(teamsData);
+      setTeams(teamsData.results || teamsData);
+      setFolders(foldersData.results || foldersData || []);
 
       // Set the first organization as default if available
       if (orgsData && orgsData.length > 0) {
