@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Save, AlertCircle, CheckCircle, Plus } from 'lucide-react';
+import { Save, AlertCircle, CheckCircle, Plus, Folder, Lock, Globe } from 'lucide-react';
 import Sidebar from '../shared/Sidebar';
 import { api } from '../../services/api';
 
@@ -17,12 +17,15 @@ const CreatePromptPage = () => {
 
   const [categories, setCategories] = useState([]);
   const [teams, setTeams] = useState([]);
-  const [folders, setFolders] = useState([]);
+  const [privateFolders, setPrivateFolders] = useState([]);
+  const [publicFolders, setPublicFolders] = useState([]);
+  const [saveLocationType, setSaveLocationType] = useState('PRIVATE');
   const [newCategoryName, setNewCategoryName] = useState('');
   const [isCreatingCategory, setIsCreatingCategory] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingFolders, setIsLoadingFolders] = useState(false);
 
   // Organization ID - in a real app this should come from context/auth
   // For now we'll fetch the user and use their first organization or a default
@@ -33,21 +36,43 @@ const CreatePromptPage = () => {
     fetchInitialData();
   }, []);
 
+  const fetchAllFolders = useCallback(async () => {
+    setIsLoadingFolders(true);
+    try {
+      console.log('Page: Fetching all folders (private and public)...');
+      const [privateData, publicData] = await Promise.all([
+        api.getFolders({ type: 'PRIVATE' }),
+        api.getFolders({ type: 'PUBLIC' })
+      ]);
+      console.log('Page: Folders fetched:', { privateData, publicData });
+      setPrivateFolders(privateData.results || privateData || []);
+      setPublicFolders(publicData.results || publicData || []);
+    } catch (err) {
+      console.error('Page: Error fetching folders:', err);
+      setPrivateFolders([]);
+      setPublicFolders([]);
+    } finally {
+      setIsLoadingFolders(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchAllFolders();
+  }, [fetchAllFolders]);
+
   const fetchInitialData = async () => {
     try {
       console.log('Page: Fetching initial data...');
-      const [catsData, teamsData, orgsData, foldersData] = await Promise.all([
+      const [catsData, teamsData, orgsData] = await Promise.all([
         api.getCategories(),
         api.getTeams(),
-        api.getOrganizations(),
-        api.getFolders()
+        api.getOrganizations()
       ]);
 
-      console.log('Page: Data fetched:', { catsData, teamsData, orgsData, foldersData });
+      console.log('Page: Data fetched:', { catsData, teamsData, orgsData });
 
       setCategories(catsData);
       setTeams(teamsData.results || teamsData);
-      setFolders(foldersData.results || foldersData || []);
 
       // Set the first organization as default if available
       if (orgsData && orgsData.length > 0) {
@@ -358,23 +383,174 @@ const CreatePromptPage = () => {
             </div>
           )}
 
-          {/* Step 7: Select Folder */}
+          {/* Step 7: Save Location */}
           <div className="form-group">
-            <label className="form-label" htmlFor="folder">
-              Select Folder ({formData.visibility === 'PRIVATE' ? 'Private' : 'Team'})
+            <label className="form-label">
+              Save Location
             </label>
-            <select
-              id="folder"
-              name="folder"
-              className="form-input"
-              value={formData.folder}
-              onChange={handleChange}
-            >
-              <option value="">-- No Folder (Root) --</option>
-              {folders.map(folder => (
-                <option key={folder.id} value={folder.id}>{folder.name}</option>
-              ))}
-            </select>
+            <p style={{ color: '#6b7280', fontSize: '0.875rem', marginBottom: '12px' }}>
+              Choose where to save your prompt. This is independent of visibility settings.
+            </p>
+
+            {isLoadingFolders ? (
+              <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>Loading folders...</p>
+            ) : (
+              <div style={{ display: 'flex', gap: '16px' }}>
+                {/* Private Folders Section */}
+                <div style={{
+                  flex: 1,
+                  padding: '16px',
+                  backgroundColor: saveLocationType === 'PRIVATE' ? '#f0f9ff' : '#f9fafb',
+                  borderRadius: '8px',
+                  border: saveLocationType === 'PRIVATE' ? '2px solid var(--primary-color)' : '1px solid #e5e7eb'
+                }}>
+                  <div
+                    style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', cursor: 'pointer' }}
+                    onClick={() => { setSaveLocationType('PRIVATE'); setFormData(prev => ({ ...prev, folder: '' })); }}
+                  >
+                    <Lock size={18} color="#6b7280" />
+                    <span style={{ fontWeight: 600, color: '#374151' }}>Private Folders</span>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <label
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        padding: '10px',
+                        backgroundColor: saveLocationType === 'PRIVATE' && !formData.folder ? '#dbeafe' : 'white',
+                        border: saveLocationType === 'PRIVATE' && !formData.folder ? '1px solid var(--primary-color)' : '1px solid #e5e7eb',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        fontSize: '0.875rem'
+                      }}
+                    >
+                      <input
+                        type="radio"
+                        name="folder"
+                        value=""
+                        checked={saveLocationType === 'PRIVATE' && !formData.folder}
+                        onChange={() => { setSaveLocationType('PRIVATE'); setFormData(prev => ({ ...prev, folder: '' })); }}
+                      />
+                      <Folder size={16} color="#6b7280" />
+                      <span>Private Root</span>
+                    </label>
+
+                    {privateFolders.map(folder => (
+                      <label
+                        key={folder.id}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '10px',
+                          padding: '10px',
+                          paddingLeft: '24px',
+                          backgroundColor: saveLocationType === 'PRIVATE' && formData.folder === String(folder.id) ? '#dbeafe' : 'white',
+                          border: saveLocationType === 'PRIVATE' && formData.folder === String(folder.id) ? '1px solid var(--primary-color)' : '1px solid #e5e7eb',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                          fontSize: '0.875rem'
+                        }}
+                      >
+                        <input
+                          type="radio"
+                          name="folder"
+                          value={folder.id}
+                          checked={saveLocationType === 'PRIVATE' && formData.folder === String(folder.id)}
+                          onChange={() => { setSaveLocationType('PRIVATE'); setFormData(prev => ({ ...prev, folder: String(folder.id) })); }}
+                        />
+                        <Folder size={16} color="#6b7280" />
+                        <span>{folder.name}</span>
+                      </label>
+                    ))}
+
+                    {privateFolders.length === 0 && (
+                      <p style={{ color: '#9ca3af', fontSize: '0.75rem', margin: '4px 0 0 0', fontStyle: 'italic' }}>
+                        No subfolders
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Public Folders Section */}
+                <div style={{
+                  flex: 1,
+                  padding: '16px',
+                  backgroundColor: saveLocationType === 'PUBLIC' ? '#f0f9ff' : '#f9fafb',
+                  borderRadius: '8px',
+                  border: saveLocationType === 'PUBLIC' ? '2px solid var(--primary-color)' : '1px solid #e5e7eb'
+                }}>
+                  <div
+                    style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', cursor: 'pointer' }}
+                    onClick={() => { setSaveLocationType('PUBLIC'); setFormData(prev => ({ ...prev, folder: '' })); }}
+                  >
+                    <Globe size={18} color="#6b7280" />
+                    <span style={{ fontWeight: 600, color: '#374151' }}>Public Folders</span>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <label
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        padding: '10px',
+                        backgroundColor: saveLocationType === 'PUBLIC' && !formData.folder ? '#dbeafe' : 'white',
+                        border: saveLocationType === 'PUBLIC' && !formData.folder ? '1px solid var(--primary-color)' : '1px solid #e5e7eb',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        fontSize: '0.875rem'
+                      }}
+                    >
+                      <input
+                        type="radio"
+                        name="folder"
+                        value=""
+                        checked={saveLocationType === 'PUBLIC' && !formData.folder}
+                        onChange={() => { setSaveLocationType('PUBLIC'); setFormData(prev => ({ ...prev, folder: '' })); }}
+                      />
+                      <Folder size={16} color="#6b7280" />
+                      <span>Public Root</span>
+                    </label>
+
+                    {publicFolders.map(folder => (
+                      <label
+                        key={folder.id}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '10px',
+                          padding: '10px',
+                          paddingLeft: '24px',
+                          backgroundColor: saveLocationType === 'PUBLIC' && formData.folder === String(folder.id) ? '#dbeafe' : 'white',
+                          border: saveLocationType === 'PUBLIC' && formData.folder === String(folder.id) ? '1px solid var(--primary-color)' : '1px solid #e5e7eb',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                          fontSize: '0.875rem'
+                        }}
+                      >
+                        <input
+                          type="radio"
+                          name="folder"
+                          value={folder.id}
+                          checked={saveLocationType === 'PUBLIC' && formData.folder === String(folder.id)}
+                          onChange={() => { setSaveLocationType('PUBLIC'); setFormData(prev => ({ ...prev, folder: String(folder.id) })); }}
+                        />
+                        <Folder size={16} color="#6b7280" />
+                        <span>{folder.name}</span>
+                      </label>
+                    ))}
+
+                    {publicFolders.length === 0 && (
+                      <p style={{ color: '#9ca3af', fontSize: '0.75rem', margin: '4px 0 0 0', fontStyle: 'italic' }}>
+                        No subfolders
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Submit */}

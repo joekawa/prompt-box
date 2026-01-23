@@ -1,0 +1,4 @@
+Business Rules
+
+- Visibility does not impact the save location
+- Visibility is only used to limit who can see the prompt in the saved Folders

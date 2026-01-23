@@ -1,0 +1,11 @@
+Save Prompt
+
+As a user, I want a save prompt flow
+so that I can save a prompt for later use
+
+- A prompt should be able to save a prompt in their private folder
+- A prompt should be able to save a prompt in a public folder
+- A prompt should be able to save a prompt in a team folder
+- A prompt should be able to save a prompt in a folder
+- Visibility does not impact the save location
+

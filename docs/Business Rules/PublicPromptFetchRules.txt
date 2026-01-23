@@ -1,0 +1,5 @@
+Business Rules
+
+1. Return all prompts with visibility = PUBLIC
+2. Return all prompts with visibility = TEAM and team_id in user's teams
+3. Return all prompts with visibility = PRIVATE and created_by = user.id

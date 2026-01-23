@@ -56,9 +56,13 @@ const PublicFolderPage = () => {
       const folders = await api.getFolders(folderParams);
 
       // 2. Fetch Prompts
+      // Business Rules (PublicPromptFetchRules.txt):
+      // - Return all prompts with visibility = PUBLIC
+      // - Return all prompts with visibility = TEAM and team_id in user's teams
+      // - Return all prompts with visibility = PRIVATE and created_by = user.id
+      // The backend handles this filtering logic based on authenticated user
       const promptParams = {
         organization_id: organizationId,
-        visibility: 'PUBLIC',
         folder_id: currentFolderId || 'root', // Filter by folder
         ordering: 'name',
         page: currentPage,

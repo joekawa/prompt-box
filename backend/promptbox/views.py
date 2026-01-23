@@ -174,44 +174,68 @@ class PromptViewSet(viewsets.ModelViewSet):
         return PromptSerializer
 
     def get_queryset(self):
-        # Filter by organization
         user = self.request.user
-        # Restrict to organizations the user is a member of
-        user_org_ids = OrganizationMember.objects.filter(user=user).values_list('organization_id', flat=True)
-        queryset = Prompt.objects.filter(organization_id__in=user_org_ids)
 
+        # Get user's organization IDs
+        user_org_ids = OrganizationMember.objects.filter(user=user).values_list('organization_id', flat=True)
+
+        # Get user's team IDs
+        user_team_ids = TeamMember.objects.filter(user=user).values_list('team_id', flat=True)
+
+        # Base queryset restricted to user's organizations
+        base_queryset = Prompt.objects.filter(organization_id__in=user_org_ids)
+
+        # Get query params
         org_id = self.request.query_params.get('organization_id')
         team_id = self.request.query_params.get('team_id')
         visibility = self.request.query_params.get('visibility')
         created_by = self.request.query_params.get('created_by')
         folder_id = self.request.query_params.get('folder_id')
 
+        # Apply organization filter if specified
         if org_id:
-            queryset = queryset.filter(organization_id=org_id)
+            base_queryset = base_queryset.filter(organization_id=org_id)
 
-        if team_id:
-            # Filter prompts shared with this team
-            queryset = queryset.filter(shared_teams__team_id=team_id)
-
-        if visibility:
-            queryset = queryset.filter(visibility=visibility)
-
-        if created_by:
-            if created_by == 'me':
-                queryset = queryset.filter(created_by=self.request.user)
-            else:
-                queryset = queryset.filter(created_by_id=created_by)
-
+        # Apply folder filter if specified
         if folder_id:
             if folder_id == 'root':
-                queryset = queryset.filter(folder__isnull=True)
+                base_queryset = base_queryset.filter(folder__isnull=True)
             else:
-                queryset = queryset.filter(folder_id=folder_id)
+                base_queryset = base_queryset.filter(folder_id=folder_id)
 
-        # In a real scenario, we would also filter by:
-        # 1. Prompts created by the user (My Prompts)
-        # 2. Prompts shared with teams the user is a member of
-        # queryset = queryset.filter(Q(created_by=self.request.user) | Q(shared_teams__team__members__user=self.request.user)).distinct()
+        # If specific visibility is requested, filter by that visibility with appropriate access rules
+        if visibility:
+            if visibility == 'PUBLIC':
+                queryset = base_queryset.filter(visibility='PUBLIC')
+            elif visibility == 'TEAM':
+                # Only return TEAM prompts shared with user's teams
+                queryset = base_queryset.filter(visibility='TEAM', shared_teams__team_id__in=user_team_ids)
+            elif visibility == 'PRIVATE':
+                # Only return PRIVATE prompts created by the user
+                queryset = base_queryset.filter(visibility='PRIVATE', created_by=user)
+            else:
+                queryset = base_queryset.filter(visibility=visibility)
+        else:
+            # No visibility filter: Apply PublicPromptFetchRules business rules
+            # 1. Return all prompts with visibility = PUBLIC
+            # 2. Return all prompts with visibility = TEAM and team_id in user's teams
+            # 3. Return all prompts with visibility = PRIVATE and created_by = user.id
+            queryset = base_queryset.filter(
+                Q(visibility='PUBLIC') |
+                Q(visibility='TEAM', shared_teams__team_id__in=user_team_ids) |
+                Q(visibility='PRIVATE', created_by=user)
+            ).distinct()
+
+        # Apply team filter if specified (for specific team queries)
+        if team_id:
+            queryset = queryset.filter(shared_teams__team_id=team_id)
+
+        # Apply created_by filter if specified
+        if created_by:
+            if created_by == 'me':
+                queryset = queryset.filter(created_by=user)
+            else:
+                queryset = queryset.filter(created_by_id=created_by)
 
         return queryset
 

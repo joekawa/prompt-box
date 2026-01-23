@@ -1,0 +1,17 @@
+Create Prompt
+
+As a user, I want to easily create a new prompt
+so that I can save it for later use
+
+- A prompt should have a name
+- A prompt should have a description
+- A prompt should have a model
+- A prompt should have a visibility
+- A prompt should have a category
+- A prompt should have a team
+- A prompt should have a folder
+- A prompt should be able to save a prompt in their private folder
+- A prompt should be able to save a prompt in a public folder
+- A prompt should be able to save a prompt in a team folder
+- A prompt should be able to save a prompt in a folder
+- The prompt page should follow existing design patterns
