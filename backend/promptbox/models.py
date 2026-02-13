@@ -150,6 +150,22 @@ class Folder(BaseModel):
     def __str__(self):
         return f"{self.name} ({self.type})"
 
+class PromptHistory(BaseModel):
+    """
+    Tracks changes made to a Prompt. Each record stores a snapshot of the
+    prompt fields at the time of the change.
+    """
+    prompt = models.ForeignKey(Prompt, on_delete=models.CASCADE, related_name='history')
+    changed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='prompt_changes')
+    change_summary = models.CharField(max_length=255)
+    snapshot = models.JSONField()
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"History for {self.prompt.name} at {self.created_at}"
+
 class TeamPrompt(models.Model):
     """
     Junction table for Team <-> Prompt (Access).

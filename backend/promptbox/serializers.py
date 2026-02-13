@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import (
     Organization, User, OrganizationMember, Team, TeamMember,
-    Category, Prompt, TeamPrompt, PromptCategory, Folder
+    Category, Prompt, TeamPrompt, PromptCategory, Folder, PromptHistory
 )
 
 class FolderSerializer(serializers.ModelSerializer):
@@ -165,6 +165,95 @@ class PromptSerializer(serializers.ModelSerializer):
             'description', 'prompt', 'model', 'visibility', 'is_active',
             'created_at', 'updated_at', 'categories', 'shared_teams', 'folder'
         ]
+
+class PromptHistorySerializer(serializers.ModelSerializer):
+    changed_by_name = serializers.ReadOnlyField(source='changed_by.name')
+
+    class Meta:
+        model = PromptHistory
+        fields = [
+            'id', 'prompt', 'changed_by', 'changed_by_name',
+            'change_summary', 'snapshot', 'created_at'
+        ]
+        read_only_fields = fields
+
+class UpdatePromptSerializer(serializers.ModelSerializer):
+    category_ids = serializers.ListField(
+        child=serializers.UUIDField(), write_only=True, required=False
+    )
+    team_ids = serializers.ListField(
+        child=serializers.UUIDField(), write_only=True, required=False
+    )
+
+    class Meta:
+        model = Prompt
+        fields = [
+            'id', 'name', 'description', 'prompt',
+            'model', 'visibility', 'category_ids', 'team_ids', 'folder'
+        ]
+        read_only_fields = ['id']
+
+    def _build_snapshot(self, prompt):
+        return {
+            'name': prompt.name,
+            'description': prompt.description,
+            'prompt': prompt.prompt,
+            'model': prompt.model,
+            'visibility': prompt.visibility,
+            'folder': str(prompt.folder_id) if prompt.folder_id else None,
+            'category_ids': sorted([str(pc.category_id) for pc in prompt.prompt_categories.all()]),
+            'team_ids': sorted([str(tp.team_id) for tp in prompt.shared_teams.all()]),
+        }
+
+    def update(self, instance, validated_data):
+        category_ids = validated_data.pop('category_ids', None)
+        team_ids = validated_data.pop('team_ids', None)
+
+        # Build snapshot of old state
+        old_snapshot = self._build_snapshot(instance)
+
+        # Apply field updates
+        changed_fields = []
+        for attr, value in validated_data.items():
+            old_value = getattr(instance, attr)
+            if old_value != value:
+                changed_fields.append(attr)
+                setattr(instance, attr, value)
+        instance.save()
+
+        # Update categories if provided
+        if category_ids is not None:
+            old_cat_ids = set(str(pc.category_id) for pc in instance.prompt_categories.all())
+            new_cat_ids = set(str(cid) for cid in category_ids)
+            if old_cat_ids != new_cat_ids:
+                changed_fields.append('categories')
+                instance.prompt_categories.all().delete()
+                for cat_id in category_ids:
+                    PromptCategory.objects.create(prompt=instance, category_id=cat_id)
+
+        # Update teams if provided
+        if team_ids is not None:
+            old_team_ids = set(str(tp.team_id) for tp in instance.shared_teams.all())
+            new_team_ids = set(str(tid) for tid in team_ids)
+            if old_team_ids != new_team_ids:
+                changed_fields.append('teams')
+                instance.shared_teams.all().delete()
+                for tid in team_ids:
+                    TeamPrompt.objects.create(prompt=instance, team_id=tid)
+
+        # Create history record if anything changed
+        if changed_fields:
+            request = self.context.get('request')
+            user = request.user if request else None
+            summary = 'Updated ' + ', '.join(changed_fields)
+            PromptHistory.objects.create(
+                prompt=instance,
+                changed_by=user,
+                change_summary=summary,
+                snapshot=old_snapshot,
+            )
+
+        return instance
 
 class CreatePromptSerializer(serializers.ModelSerializer):
     # Serializer specifically for handling prompt creation including relations

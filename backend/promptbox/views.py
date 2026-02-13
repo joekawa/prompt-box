@@ -9,12 +9,13 @@ from .authentication import CsrfExemptSessionAuthentication
 
 from .models import (
     Organization, User, OrganizationMember, Team, TeamMember,
-    Category, Prompt, Folder
+    Category, Prompt, Folder, PromptHistory
 )
 from .serializers import (
     OrganizationSerializer, UserSerializer, OrganizationMemberSerializer,
     TeamSerializer, TeamMemberSerializer, CategorySerializer,
-    PromptSerializer, CreatePromptSerializer, FolderSerializer,
+    PromptSerializer, CreatePromptSerializer, UpdatePromptSerializer,
+    PromptHistorySerializer, FolderSerializer,
     UserManageSerializer, UserCreateSerializer, UserUpdateSerializer
 )
 
@@ -171,6 +172,8 @@ class PromptViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.action == 'create':
             return CreatePromptSerializer
+        if self.action in ['update', 'partial_update']:
+            return UpdatePromptSerializer
         return PromptSerializer
 
     def get_queryset(self):
@@ -241,6 +244,81 @@ class PromptViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user)
+
+    @action(detail=True, methods=['get'])
+    def history(self, request, pk=None):
+        """Return paginated change history for a prompt."""
+        prompt = self.get_object()
+        history_qs = PromptHistory.objects.filter(prompt=prompt)
+        page = self.paginate_queryset(history_qs)
+        if page is not None:
+            serializer = PromptHistorySerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = PromptHistorySerializer(history_qs, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'])
+    def revert(self, request, pk=None):
+        """Revert a prompt to a previous version from history."""
+        prompt = self.get_object()
+        history_id = request.data.get('history_id')
+        if not history_id:
+            return Response({'error': 'history_id is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            history_entry = PromptHistory.objects.get(id=history_id, prompt=prompt)
+        except PromptHistory.DoesNotExist:
+            return Response({'error': 'History entry not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        snapshot = history_entry.snapshot
+
+        # Build snapshot of current state before reverting
+        current_snapshot = {
+            'name': prompt.name,
+            'description': prompt.description,
+            'prompt': prompt.prompt,
+            'model': prompt.model,
+            'visibility': prompt.visibility,
+            'folder': str(prompt.folder_id) if prompt.folder_id else None,
+            'category_ids': sorted([str(pc.category_id) for pc in prompt.prompt_categories.all()]),
+            'team_ids': sorted([str(tp.team_id) for tp in prompt.shared_teams.all()]),
+        }
+
+        # Apply snapshot fields
+        for field in ['name', 'description', 'prompt', 'model', 'visibility']:
+            if field in snapshot:
+                setattr(prompt, field, snapshot[field])
+
+        if 'folder' in snapshot:
+            prompt.folder_id = snapshot['folder']
+
+        prompt.save()
+
+        # Restore categories
+        if 'category_ids' in snapshot:
+            prompt.prompt_categories.all().delete()
+            from .models import PromptCategory
+            for cat_id in snapshot['category_ids']:
+                PromptCategory.objects.create(prompt=prompt, category_id=cat_id)
+
+        # Restore teams
+        if 'team_ids' in snapshot:
+            prompt.shared_teams.all().delete()
+            from .models import TeamPrompt
+            for tid in snapshot['team_ids']:
+                TeamPrompt.objects.create(prompt=prompt, team_id=tid)
+
+        # Create history entry for the revert
+        revert_date = history_entry.created_at.strftime('%Y-%m-%d %H:%M')
+        PromptHistory.objects.create(
+            prompt=prompt,
+            changed_by=request.user,
+            change_summary=f'Reverted to version from {revert_date}',
+            snapshot=current_snapshot,
+        )
+
+        serializer = PromptSerializer(prompt)
+        return Response(serializer.data)
 
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()

@@ -131,7 +131,7 @@ const MyFolderPage = () => {
                     </tr>
                   ) : (
                     prompts.map(prompt => (
-                      <tr key={prompt.id} style={{ borderBottom: '1px solid #f3f4f6', cursor: 'pointer' }} onClick={() => console.log('View prompt', prompt.id)}>
+                      <tr key={prompt.id} style={{ borderBottom: '1px solid #f3f4f6', cursor: 'pointer' }} onClick={() => navigate(`/dashboard/prompts/${prompt.id}`)}>
                         <td style={{ padding: '12px 16px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <FileText size={16} className="text-primary" />

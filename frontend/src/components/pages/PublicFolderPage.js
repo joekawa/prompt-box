@@ -288,7 +288,7 @@ const PublicFolderPage = () => {
                   ) : (
                     items.map(item => (
                       <tr key={`${item.type}-${item.id}`} style={{ borderBottom: '1px solid #f3f4f6', cursor: 'pointer' }}
-                        onClick={() => item.type === 'folder' ? handleFolderClick(item) : console.log('View prompt', item.id)}
+                        onClick={() => item.type === 'folder' ? handleFolderClick(item) : navigate(`/dashboard/prompts/${item.id}`)}
                       >
                         <td style={{ padding: '12px 16px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>

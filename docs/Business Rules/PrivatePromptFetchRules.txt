@@ -1,0 +1,4 @@
+Business Rules for Private Prompt Fetching
+
+1. Only prompts created by the user should be fetched
+2. Prompts should be sorted alphabetically by name

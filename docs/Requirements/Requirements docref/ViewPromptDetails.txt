@@ -1,0 +1,14 @@
+Requirement: View Prompt Details
+
+When a user clicks on a prompt in the prompt list in their private folder or in a public folder, they should be taken to a page that displays the prompt details.
+The page should follow the same layout as the create prompt page, but with the prompt details pre-filled.
+The user should be able to edit the prompt details and save them.
+When a prompt is saved, the application should track all changes made to the prompt.
+The application should also show a history of changes made to the prompt.
+The history should be displayed in a table with the following columns: Date, User, Change.
+The history should be sorted by date, with the most recent change first.
+The history should be paginated, with 10 changes per page.
+The history should be shown in the same page as the prompt details, below the prompt details.
+The history should be collapsible, so that the user can hide it if they don't need to see it.
+The user should be able to click on a change to see the details of that change.
+The user should be able to revert to a previous version of the prompt.

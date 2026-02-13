@@ -49,6 +49,16 @@ export const api = {
     return response.json();
   },
 
+  getPrompt: async (id) => {
+    console.log(`API: Fetching prompt ${id}`);
+    const response = await fetch(`${API_BASE_URL}/prompts/${id}/`, {
+      headers: getHeaders(),
+      credentials: 'include',
+    });
+    if (!response.ok) throw new Error('Failed to fetch prompt');
+    return response.json();
+  },
+
   deletePrompt: async (id) => {
     console.log(`API: Deleting prompt ${id}`);
     const response = await fetch(`${API_BASE_URL}/prompts/${id}/`, {
@@ -58,6 +68,32 @@ export const api = {
     });
     if (!response.ok) throw new Error('Failed to delete prompt');
     return true;
+  },
+
+  getPromptHistory: async (id, params = {}) => {
+    console.log(`API: Fetching history for prompt ${id}`, params);
+    const queryString = new URLSearchParams(params).toString();
+    const response = await fetch(`${API_BASE_URL}/prompts/${id}/history/?${queryString}`, {
+      headers: getHeaders(),
+      credentials: 'include',
+    });
+    if (!response.ok) throw new Error('Failed to fetch prompt history');
+    return response.json();
+  },
+
+  revertPrompt: async (id, historyId) => {
+    console.log(`API: Reverting prompt ${id} to history ${historyId}`);
+    const response = await fetch(`${API_BASE_URL}/prompts/${id}/revert/`, {
+      method: 'POST',
+      headers: getHeaders(),
+      credentials: 'include',
+      body: JSON.stringify({ history_id: historyId }),
+    });
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to revert prompt');
+    }
+    return response.json();
   },
 
   // Categories
