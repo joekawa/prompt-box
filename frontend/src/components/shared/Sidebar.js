@@ -9,7 +9,8 @@ import {
   User,
   Menu,
   ChevronLeft,
-  PlusCircle
+  PlusCircle,
+  GitBranch
 } from 'lucide-react';
 
 const Sidebar = () => {
@@ -24,6 +25,7 @@ const Sidebar = () => {
     { icon: <Globe size={20} />, label: 'Public Folder', path: '/dashboard/public' },
     { icon: <Users size={20} />, label: 'Manage Teams', path: '/dashboard/teams' },
     { icon: <UserCog size={20} />, label: 'Manage Users', path: '/dashboard/users' },
+    { icon: <GitBranch size={20} />, label: 'Workflows', path: '/dashboard/workflows' },
   ];
 
   return (

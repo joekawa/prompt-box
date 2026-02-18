@@ -9,14 +9,17 @@ from .authentication import CsrfExemptSessionAuthentication
 
 from .models import (
     Organization, User, OrganizationMember, Team, TeamMember,
-    Category, Prompt, Folder, PromptHistory
+    Category, Prompt, Folder, PromptHistory,
+    Workflow, WorkflowHistory
 )
 from .serializers import (
     OrganizationSerializer, UserSerializer, OrganizationMemberSerializer,
     TeamSerializer, TeamMemberSerializer, CategorySerializer,
     PromptSerializer, CreatePromptSerializer, UpdatePromptSerializer,
     PromptHistorySerializer, FolderSerializer,
-    UserManageSerializer, UserCreateSerializer, UserUpdateSerializer
+    UserManageSerializer, UserCreateSerializer, UserUpdateSerializer,
+    WorkflowSerializer, CreateWorkflowSerializer, UpdateWorkflowSerializer,
+    WorkflowHistorySerializer
 )
 
 class StandardResultsSetPagination(pagination.PageNumberPagination):
@@ -374,6 +377,72 @@ class FolderViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(team_id=team_id)
 
         return queryset
+
+class WorkflowViewSet(viewsets.ModelViewSet):
+    queryset = Workflow.objects.all()
+    serializer_class = WorkflowSerializer
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CsrfExemptSessionAuthentication]
+    pagination_class = StandardResultsSetPagination
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['name', 'description']
+    ordering_fields = ['name', 'created_at']
+    ordering = ['name']
+
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return CreateWorkflowSerializer
+        if self.action in ['update', 'partial_update']:
+            return UpdateWorkflowSerializer
+        return WorkflowSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        user_org_ids = OrganizationMember.objects.filter(user=user).values_list('organization_id', flat=True)
+        user_team_ids = TeamMember.objects.filter(user=user).values_list('team_id', flat=True)
+
+        base_qs = Workflow.objects.filter(organization_id__in=user_org_ids)
+
+        org_id = self.request.query_params.get('organization_id')
+        if org_id:
+            base_qs = base_qs.filter(organization_id=org_id)
+
+        visibility = self.request.query_params.get('visibility')
+        if visibility:
+            if visibility == 'PUBLIC':
+                queryset = base_qs.filter(visibility='PUBLIC')
+            elif visibility == 'TEAM':
+                queryset = base_qs.filter(visibility='TEAM', shared_teams__team_id__in=user_team_ids)
+            elif visibility == 'PRIVATE':
+                queryset = base_qs.filter(visibility='PRIVATE', created_by=user)
+            else:
+                queryset = base_qs.filter(visibility=visibility)
+        else:
+            queryset = base_qs.filter(
+                Q(visibility='PUBLIC') |
+                Q(visibility='TEAM', shared_teams__team_id__in=user_team_ids) |
+                Q(visibility='PRIVATE', created_by=user)
+            ).distinct()
+
+        return queryset
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        user_org_ids = list(OrganizationMember.objects.filter(user=user).values_list('organization_id', flat=True))
+        org_id = user_org_ids[0] if user_org_ids else None
+        serializer.save(created_by=user, organization_id=org_id)
+
+    @action(detail=True, methods=['get'])
+    def history(self, request, pk=None):
+        """Return paginated change history for a workflow."""
+        workflow = self.get_object()
+        history_qs = WorkflowHistory.objects.filter(workflow=workflow)
+        page = self.paginate_queryset(history_qs)
+        if page is not None:
+            serializer = WorkflowHistorySerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = WorkflowHistorySerializer(history_qs, many=True)
+        return Response(serializer.data)
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()

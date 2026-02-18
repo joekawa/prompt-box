@@ -191,3 +191,58 @@ class PromptCategory(models.Model):
 
     def __str__(self):
         return f"{self.prompt.name} in {self.category.name}"
+
+class Workflow(BaseModel):
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='workflows')
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='workflows')
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    visibility = models.CharField(
+        max_length=20,
+        choices=[('PRIVATE', 'Private'), ('TEAM', 'Team'), ('PUBLIC', 'Public')],
+        default='PRIVATE'
+    )
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.name
+
+class WorkflowStep(BaseModel):
+    workflow = models.ForeignKey(Workflow, on_delete=models.CASCADE, related_name='steps')
+    prompt = models.ForeignKey(Prompt, on_delete=models.SET_NULL, null=True, related_name='workflow_steps')
+    order = models.PositiveIntegerField()
+    name = models.CharField(max_length=255, blank=True)
+
+    class Meta:
+        ordering = ['order']
+
+    def __str__(self):
+        return f"Step {self.order} of {self.workflow.name}"
+
+class WorkflowTeam(models.Model):
+    """
+    Junction table for Workflow <-> Team (Access).
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    workflow = models.ForeignKey(Workflow, on_delete=models.CASCADE, related_name='shared_teams')
+    team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='workflow_teams')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.team.name} access to {self.workflow.name}"
+
+class WorkflowHistory(BaseModel):
+    """
+    Tracks changes made to a Workflow. Each record stores a snapshot of the
+    workflow fields at the time of the change.
+    """
+    workflow = models.ForeignKey(Workflow, on_delete=models.CASCADE, related_name='history')
+    changed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='workflow_changes')
+    change_summary = models.CharField(max_length=255)
+    snapshot = models.JSONField()
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"History for {self.workflow.name} at {self.created_at}"

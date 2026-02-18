@@ -362,4 +362,75 @@ export const api = {
     }
     return response.json();
   },
+
+  // Workflows
+  getWorkflows: async (params = {}) => {
+    console.log('API: Fetching workflows', params);
+    const queryString = new URLSearchParams(params).toString();
+    const response = await fetch(`${API_BASE_URL}/workflows/?${queryString}`, {
+      headers: getHeaders(),
+      credentials: 'include',
+    });
+    if (!response.ok) throw new Error('Failed to fetch workflows');
+    return response.json();
+  },
+
+  getWorkflow: async (id) => {
+    console.log(`API: Fetching workflow ${id}`);
+    const response = await fetch(`${API_BASE_URL}/workflows/${id}/`, {
+      headers: getHeaders(),
+      credentials: 'include',
+    });
+    if (!response.ok) throw new Error('Failed to fetch workflow');
+    return response.json();
+  },
+
+  createWorkflow: async (data) => {
+    console.log('API: Creating workflow', data);
+    const response = await fetch(`${API_BASE_URL}/workflows/`, {
+      method: 'POST',
+      headers: getHeaders(),
+      credentials: 'include',
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || JSON.stringify(errorData) || 'Failed to create workflow');
+    }
+    return response.json();
+  },
+
+  updateWorkflow: async (id, data) => {
+    console.log(`API: Updating workflow ${id}`, data);
+    const response = await fetch(`${API_BASE_URL}/workflows/${id}/`, {
+      method: 'PATCH',
+      headers: getHeaders(),
+      credentials: 'include',
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error('Failed to update workflow');
+    return response.json();
+  },
+
+  deleteWorkflow: async (id) => {
+    console.log(`API: Deleting workflow ${id}`);
+    const response = await fetch(`${API_BASE_URL}/workflows/${id}/`, {
+      method: 'DELETE',
+      headers: getHeaders(),
+      credentials: 'include',
+    });
+    if (!response.ok) throw new Error('Failed to delete workflow');
+    return true;
+  },
+
+  getWorkflowHistory: async (id, params = {}) => {
+    console.log(`API: Fetching history for workflow ${id}`, params);
+    const queryString = new URLSearchParams(params).toString();
+    const response = await fetch(`${API_BASE_URL}/workflows/${id}/history/?${queryString}`, {
+      headers: getHeaders(),
+      credentials: 'include',
+    });
+    if (!response.ok) throw new Error('Failed to fetch workflow history');
+    return response.json();
+  },
 };

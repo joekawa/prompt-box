@@ -1,7 +1,8 @@
 from rest_framework import serializers
 from .models import (
     Organization, User, OrganizationMember, Team, TeamMember,
-    Category, Prompt, TeamPrompt, PromptCategory, Folder, PromptHistory
+    Category, Prompt, TeamPrompt, PromptCategory, Folder, PromptHistory,
+    Workflow, WorkflowStep, WorkflowTeam, WorkflowHistory
 )
 
 class FolderSerializer(serializers.ModelSerializer):
@@ -284,3 +285,163 @@ class CreatePromptSerializer(serializers.ModelSerializer):
             TeamPrompt.objects.create(prompt=prompt, team_id=team_id)
 
         return prompt
+
+
+class WorkflowStepSerializer(serializers.ModelSerializer):
+    prompt_name = serializers.ReadOnlyField(source='prompt.name')
+
+    class Meta:
+        model = WorkflowStep
+        fields = ['id', 'prompt', 'prompt_name', 'order', 'name']
+
+
+class WorkflowTeamSerializer(serializers.ModelSerializer):
+    team_name = serializers.ReadOnlyField(source='team.name')
+
+    class Meta:
+        model = WorkflowTeam
+        fields = ['id', 'team', 'team_name']
+
+
+class WorkflowSerializer(serializers.ModelSerializer):
+    steps = WorkflowStepSerializer(many=True, read_only=True)
+    shared_teams = WorkflowTeamSerializer(many=True, read_only=True)
+    created_by_name = serializers.ReadOnlyField(source='created_by.name')
+    step_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Workflow
+        fields = [
+            'id', 'organization', 'created_by', 'created_by_name', 'name',
+            'description', 'visibility', 'is_active',
+            'created_at', 'updated_at', 'steps', 'shared_teams', 'step_count'
+        ]
+
+    def get_step_count(self, obj):
+        return obj.steps.count()
+
+
+class WorkflowStepInputSerializer(serializers.Serializer):
+    prompt = serializers.UUIDField()
+    order = serializers.IntegerField(min_value=0)
+    name = serializers.CharField(max_length=255, allow_blank=True, default='')
+
+
+class CreateWorkflowSerializer(serializers.ModelSerializer):
+    team_ids = serializers.ListField(
+        child=serializers.UUIDField(), write_only=True, required=False
+    )
+    steps = WorkflowStepInputSerializer(many=True, write_only=True, required=False)
+
+    class Meta:
+        model = Workflow
+        fields = ['id', 'name', 'description', 'visibility', 'team_ids', 'steps']
+
+    def create(self, validated_data):
+        team_ids = validated_data.pop('team_ids', [])
+        steps_data = validated_data.pop('steps', [])
+
+        workflow = Workflow.objects.create(**validated_data)
+
+        for step in steps_data:
+            WorkflowStep.objects.create(
+                workflow=workflow,
+                prompt_id=step['prompt'],
+                order=step['order'],
+                name=step.get('name', ''),
+            )
+
+        for tid in team_ids:
+            WorkflowTeam.objects.create(workflow=workflow, team_id=tid)
+
+        return workflow
+
+
+class UpdateWorkflowSerializer(serializers.ModelSerializer):
+    team_ids = serializers.ListField(
+        child=serializers.UUIDField(), write_only=True, required=False
+    )
+    steps = WorkflowStepInputSerializer(many=True, write_only=True, required=False)
+
+    class Meta:
+        model = Workflow
+        fields = ['id', 'name', 'description', 'visibility', 'team_ids', 'steps']
+        read_only_fields = ['id']
+
+    def _build_snapshot(self, workflow):
+        return {
+            'name': workflow.name,
+            'description': workflow.description,
+            'visibility': workflow.visibility,
+            'team_ids': sorted([str(wt.team_id) for wt in workflow.shared_teams.all()]),
+            'steps': [
+                {'prompt': str(s.prompt_id), 'order': s.order, 'name': s.name}
+                for s in workflow.steps.order_by('order')
+            ],
+        }
+
+    def update(self, instance, validated_data):
+        team_ids = validated_data.pop('team_ids', None)
+        steps_data = validated_data.pop('steps', None)
+
+        old_snapshot = self._build_snapshot(instance)
+
+        changed_fields = []
+        for attr, value in validated_data.items():
+            if getattr(instance, attr) != value:
+                changed_fields.append(attr)
+                setattr(instance, attr, value)
+        instance.save()
+
+        if team_ids is not None:
+            old_team_ids = set(str(wt.team_id) for wt in instance.shared_teams.all())
+            new_team_ids = set(str(tid) for tid in team_ids)
+            if old_team_ids != new_team_ids:
+                changed_fields.append('teams')
+                instance.shared_teams.all().delete()
+                for tid in team_ids:
+                    WorkflowTeam.objects.create(workflow=instance, team_id=tid)
+
+        if steps_data is not None:
+            old_steps = [
+                {'prompt': str(s.prompt_id), 'order': s.order, 'name': s.name}
+                for s in instance.steps.order_by('order')
+            ]
+            new_steps = [
+                {'prompt': str(s['prompt']), 'order': s['order'], 'name': s.get('name', '')}
+                for s in steps_data
+            ]
+            if old_steps != new_steps:
+                changed_fields.append('steps')
+                instance.steps.all().delete()
+                for step in steps_data:
+                    WorkflowStep.objects.create(
+                        workflow=instance,
+                        prompt_id=step['prompt'],
+                        order=step['order'],
+                        name=step.get('name', ''),
+                    )
+
+        if changed_fields:
+            request = self.context.get('request')
+            user = request.user if request else None
+            WorkflowHistory.objects.create(
+                workflow=instance,
+                changed_by=user,
+                change_summary='Updated ' + ', '.join(changed_fields),
+                snapshot=old_snapshot,
+            )
+
+        return instance
+
+
+class WorkflowHistorySerializer(serializers.ModelSerializer):
+    changed_by_name = serializers.ReadOnlyField(source='changed_by.name')
+
+    class Meta:
+        model = WorkflowHistory
+        fields = [
+            'id', 'workflow', 'changed_by', 'changed_by_name',
+            'change_summary', 'snapshot', 'created_at'
+        ]
+        read_only_fields = fields

@@ -11,6 +11,9 @@ import PublicFolderPage from './components/pages/PublicFolderPage';
 import ManageTeamsPage from './components/pages/ManageTeamsPage';
 import ManageUsersPage from './components/pages/ManageUsersPage';
 import ViewPromptPage from './components/pages/ViewPromptPage';
+import WorkflowsPage from './components/pages/WorkflowsPage';
+import CreateWorkflowPage from './components/pages/CreateWorkflowPage';
+import ViewWorkflowPage from './components/pages/ViewWorkflowPage';
 
 function App() {
   return (
@@ -27,6 +30,9 @@ function App() {
           <Route path="/dashboard/teams" element={<ManageTeamsPage />} />
           <Route path="/dashboard/users" element={<ManageUsersPage />} />
           <Route path="/dashboard/prompts/:id" element={<ViewPromptPage />} />
+          <Route path="/dashboard/workflows" element={<WorkflowsPage />} />
+          <Route path="/dashboard/workflows/create" element={<CreateWorkflowPage />} />
+          <Route path="/dashboard/workflows/:id" element={<ViewWorkflowPage />} />
         </Routes>
       </div>
     </Router>
